@@ -15,15 +15,17 @@ services:
     # Override its entrypoint to run the subscription-capable SQLite worker.
     entrypoint: ["bun", "/opt/claude-mem/scripts/worker-service.cjs"]
     command: ["--daemon"]
-    # Worker APIs use localhost access. Devices connect through SSH.
-    network_mode: host
+    ports:
+      - "${CLAUDE_MEM_BIND_IP:-10.254.254.220}:37777:37777"
+    networks:
+      - claude_mem_net
     environment:
       HOME: /home/node
       CLAUDE_MEM_RUNTIME: worker
       CLAUDE_MEM_PROVIDER: claude
       CLAUDE_MEM_CLAUDE_AUTH_METHOD: subscription
       CLAUDE_MEM_DATA_DIR: /data/claude-mem
-      CLAUDE_MEM_WORKER_HOST: 127.0.0.1
+      CLAUDE_MEM_WORKER_HOST: "0.0.0.0"
       CLAUDE_MEM_WORKER_PORT: "37777"
       CLAUDE_CONFIG_DIR: /home/node/.claude
       CLAUDE_MEM_CLAUDE_CONFIG_DIR: /home/node/.claude
@@ -40,6 +42,10 @@ services:
       retries: 10
       start_period: 120s
     stop_grace_period: 60s
+
+networks:
+  claude_mem_net:
+    driver: bridge
 
 # Stable, externally managed storage survives stack/container recreation.
 # Do not delete these volumes. Keep separate backups of memory-data.
