@@ -6,7 +6,7 @@ services:
     build:
       context: .
       dockerfile: docker/claude-mem/Dockerfile
-    image: ${CLAUDE_MEM_IMAGE:-claude-mem-server:13.28.0}
+    image: ${CLAUDE_MEM_IMAGE:-claude-mem-server:13.35.0}
     pull_policy: build
     container_name: claude-mem-server
     restart: unless-stopped
