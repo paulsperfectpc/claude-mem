@@ -1,26 +1,23 @@
 # claude-mem Portainer deployment
 
-Use this branch as the deployment source:
-- Repository: https://github.com/paulsperfectpc/claude-mem.git
-- Repository reference: refs/heads/portainer
-- Compose path: compose.yml
+Repository: https://github.com/paulsperfectpc/claude-mem.git
+Repository reference: refs/heads/portainer
+Compose path: compose.yml
 
-This branch contains deployment files only, so Portainer's Git security check
-does not encounter application-repository symlinks. Keep this branch separate
-from main when syncing the fork with upstream.
+This branch contains deployment files only. Keep it separate from main when
+syncing the application fork, so Portainer does not encounter upstream symlinks.
 
-The application build uses the upstream v15.4.0 release, matching the server
-version observed before the stack was removed. Its Dockerfile builds the worker;
-the Compose entrypoint selects SQLite and Claude subscription authentication.
+The build uses upstream v15.5.0. The Compose entrypoint runs the SQLite worker
+with Claude subscription authentication. No API key is required.
 
-The existing external Docker volumes must already exist:
-- claude_mem_runtime: /data/claude-mem, including claude-mem.db
-- claude_mem_subscription_home: /home/node, including the Claude login
+These external Docker volumes must already exist:
+- claude_mem_runtime mounts at /data/claude-mem and holds the memory database.
+- claude_mem_subscription_home mounts at /home/node and holds the Claude login.
 
-Do not delete these volumes or restore an older database over them. Make a fresh
-backup before recreating the container. A missing external volume intentionally
-fails deployment instead of silently creating an empty replacement.
+Make a fresh backup before deployment. Do not delete these volumes or restore
+an older migration database over the surviving data. Missing external volumes
+intentionally fail deployment instead of creating empty replacements.
 
 Optional Portainer stack variable: CLAUDE_MEM_BIND_IP=10.254.254.220.
-No API key is required. GitOps updates track this deployment branch; upstream
-application updates require an explicit change to the release in compose.yml.
+GitOps updates track this branch; application upgrades require an explicit
+release change in compose.yml.
