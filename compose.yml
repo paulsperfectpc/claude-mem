@@ -1,0 +1,53 @@
+# Portainer deployment branch; application code is built from an upstream release.
+# Reuse the existing external volumes. Never recreate or prune them.
+services:
+  claude-mem:
+    build:
+      context: "https://github.com/thedotmack/claude-mem.git#v15.4.0"
+      dockerfile: docker/claude-mem/Dockerfile
+    image: claude-mem-server:15.4.0
+    pull_policy: build
+    container_name: claude-mem-server
+    restart: unless-stopped
+    init: true
+    entrypoint: ["bun", "/opt/claude-mem/scripts/worker-service.cjs"]
+    command: ["--daemon"]
+    ports:
+      - "${CLAUDE_MEM_BIND_IP:-10.254.254.220}:37777:37777"
+    networks:
+      - claude_mem_net
+    environment:
+      HOME: /home/node
+      CLAUDE_MEM_RUNTIME: worker
+      CLAUDE_MEM_PROVIDER: claude
+      CLAUDE_MEM_CLAUDE_AUTH_METHOD: subscription
+      CLAUDE_MEM_DATA_DIR: /data/claude-mem
+      CLAUDE_MEM_WORKER_HOST: "0.0.0.0"
+      CLAUDE_MEM_WORKER_PORT: "37777"
+      CLAUDE_CONFIG_DIR: /home/node/.claude
+      CLAUDE_MEM_CLAUDE_CONFIG_DIR: /home/node/.claude
+      CLAUDE_CODE_PATH: /usr/local/share/npm-global/bin/claude
+      CLAUDE_MEM_CHROMA_ENABLED: "true"
+      CLAUDE_MEM_CHROMA_MODE: local
+    volumes:
+      - memory-data:/data/claude-mem
+      - subscription-home:/home/node
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:37777/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 120s
+    stop_grace_period: 60s
+
+networks:
+  claude_mem_net:
+    driver: bridge
+
+volumes:
+  memory-data:
+    external: true
+    name: claude_mem_runtime
+  subscription-home:
+    external: true
+    name: claude_mem_subscription_home
